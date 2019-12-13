@@ -32,8 +32,8 @@ def evaluate(model, val_iter, vocab_size, lang):
     pad = 0
     total_loss = 0
     for b, batch in enumerate(val_iter):
-        src = batch["src"]
-        trg = batch["trg"]
+        src = torch.from_numpy(batch["src"])
+        trg = torch.from_numpy(batch["trg"])
         src, trg = src.cuda(), trg.cuda()
         output = model(src, trg, teacher_forcing_ratio=0.0)
         loss = F.nll_loss(output[1:].view(-1, vocab_size),
