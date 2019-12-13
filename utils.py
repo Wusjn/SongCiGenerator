@@ -70,10 +70,10 @@ def collate_fn(items):
 
     return {"src":pad_tensor(srcs), "trg":pad_tensor(trgs), "rhythmic":pad_tensor(rhythmics)}
 
-def getDataloader(dataset):
-    return DataLoader(SongCiDataset(dataset), batch_size=4, shuffle=True, collate_fn=collate_fn)
+def getDataloader(dataset,batch_size):
+    return DataLoader(SongCiDataset(dataset), batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
 
-def load_data():
+def load_data(batch_size):
     with open("data/lang.pkl", "rb") as file:
         lang = pickle.load(file)
-    return lang, getDataloader("data/train_set.pkl"), getDataloader("data/val_set.pkl"), getDataloader("data/test_set.pkl")
+    return lang, getDataloader("data/train_set.pkl",batch_size), getDataloader("data/val_set.pkl",batch_size), getDataloader("data/test_set.pkl",batch_size)

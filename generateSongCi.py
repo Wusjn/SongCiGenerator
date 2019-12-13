@@ -29,7 +29,7 @@ def translate(model, val_iter, vocab_size, lang):
 
 
 print("[!] preparing dataset...")
-lang, train_iter, val_iter, test_iter = load_data()
+lang, train_iter, val_iter, test_iter = load_data(16)
 vocab_size = len(lang.index2word)
 
 hidden_size = 512
@@ -42,4 +42,7 @@ decoder = Decoder(embed_size, hidden_size, vocab_size,
                   n_layers=1, dropout=0.5)
 seq2seq = Seq2Seq(encoder, decoder).cuda()
 
-seq2seq.load_state_dict(torch.load("./.save/seq2seq_7.pt"))
+seq2seq.load_state_dict(torch.load("./.save/seq2seq_{}.pt".format(10)))
+
+
+#TODO: using seq2seq to generate Song Ci

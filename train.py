@@ -77,7 +77,7 @@ def main():
     assert torch.cuda.is_available()
 
     print("[!] preparing dataset...")
-    lang, train_iter, val_iter, test_iter = load_data()
+    lang, train_iter, val_iter, test_iter = load_data(args.batch_size)
     vocab_size = len(lang.index2word)
 
     print("[lang_vocab]:%d" % (vocab_size))
