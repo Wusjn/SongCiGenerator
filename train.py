@@ -34,8 +34,7 @@ def evaluate(model, val_iter, vocab_size, lang):
     for b, batch in enumerate(val_iter):
         src = batch["src"]
         trg = batch["trg"]
-        src = Variable(src.data.cuda(), volatile=True)
-        trg = Variable(trg.data.cuda(), volatile=True)
+        src, trg = src.cuda(), trg.cuda()
         output = model(src, trg, teacher_forcing_ratio=0.0)
         loss = F.nll_loss(output[1:].view(-1, vocab_size),
                                trg[1:].contiguous().view(-1),
