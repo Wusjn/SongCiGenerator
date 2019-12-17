@@ -7,7 +7,7 @@ import numpy as np
 
 class Lang:
     def __init__(self):
-        self.word2index = {}
+        self.word2index = {"<pad>":0, "<SOS>":1, "<EOS>":2}
         self.word2count = {}
         self.index2word = {0:"<pad>", 1: "<SOS>", 2: "<EOS>"}
         self.n_words = 3  # Count SOS and EOS
@@ -39,8 +39,9 @@ class Lang:
 
 
 class SongCiDataset(Dataset):
-    def __init__(self,SongCiDatabaseFile):
+    def __init__(self,SongCiDatabaseFile,lang):
         self.SongCiDatasets = []
+        self.lang = lang
         with open(SongCiDatabaseFile,"rb") as file:
            self.SongCiDatasets = pickle.load(file)
 
@@ -53,6 +54,8 @@ class SongCiDataset(Dataset):
         rhythmic = SongCi["rhythmic"]
         src = SongCi["lines"][0]
         trg = reduce(lambda a, b: a+b, SongCi["lines"][1:], [])
+        src = [self.lang.word2index["SOS"]] + src + [self.lang.word2index["EOS"]]
+        trg = [self.lang.word2index["SOS"]] + trg + [self.lang.word2index["EOS"]]
         return {"src":src, "trg":trg, "rhythmic":rhythmic}
 
 def pad_tensor(vecs):
@@ -70,10 +73,10 @@ def collate_fn(items):
 
     return {"src":pad_tensor(srcs), "trg":pad_tensor(trgs), "rhythmic":pad_tensor(rhythmics)}
 
-def getDataloader(dataset,batch_size):
-    return DataLoader(SongCiDataset(dataset), batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+def getDataloader(dataset,lang,batch_size):
+    return DataLoader(SongCiDataset(dataset,lang), batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
 
 def load_data(batch_size):
     with open("data/lang.pkl", "rb") as file:
         lang = pickle.load(file)
-    return lang, getDataloader("data/train_set.pkl",batch_size), getDataloader("data/val_set.pkl",batch_size), getDataloader("data/test_set.pkl",batch_size)
+    return lang, getDataloader("data/train_set.pkl",lang,batch_size), getDataloader("data/val_set.pkl",lang,batch_size), getDataloader("data/test_set.pkl",lang,batch_size)

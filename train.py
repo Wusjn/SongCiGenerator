@@ -98,13 +98,14 @@ def main():
         print("[Epoch:%d] val_loss:%5.3f | val_pp:%5.2fS"
               % (e, val_loss, math.exp(val_loss)))
 
-        # Save the model if the validation loss is the best we've seen so far.
-        if not best_val_loss or val_loss < best_val_loss:
+        # Save the model whether the validation loss is the best we've seen so far or not
+        if not best_val_loss or True : #val_loss < best_val_loss:
             print("[!] saving model...")
             if not os.path.isdir(".save"):
                 os.makedirs(".save")
             torch.save(seq2seq.state_dict(), './.save/seq2seq_%d.pt' % (e))
-            best_val_loss = val_loss
+            if best_val_loss == None or best_val_loss > val_loss:
+                best_val_loss = val_loss
     test_loss = evaluate(seq2seq, test_iter, vocab_size, lang)
     print("[TEST] loss:%5.2f" % test_loss)
 
