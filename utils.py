@@ -54,8 +54,8 @@ class SongCiDataset(Dataset):
         rhythmic = SongCi["rhythmic"]
         src = SongCi["lines"][0]
         trg = reduce(lambda a, b: a+b, SongCi["lines"][1:], [])
-        src = [self.lang.word2index["SOS"]] + src + [self.lang.word2index["EOS"]]
-        trg = [self.lang.word2index["SOS"]] + trg + [self.lang.word2index["EOS"]]
+        src = [self.lang.word2index["<SOS>"]] + src + [self.lang.word2index["<EOS>"]]
+        trg = [self.lang.word2index["<SOS>"]] + trg + [self.lang.word2index["<EOS>"]]
         return {"src":src, "trg":trg, "rhythmic":rhythmic}
 
 def pad_tensor(vecs):
