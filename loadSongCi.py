@@ -18,7 +18,7 @@ for rawSongCi in rawSongCiDatabase:
     SongCi["rhythmic"] = lang.sentence2Indice(rawSongCi["rhythmic"])
     SongCi["lines"] = []
     for paragraph in rawSongCi["paragraphs"]:
-        for line in re.split("，|。", paragraph):
+        for line in re.split("，|。|、", paragraph):
             if len(line) > 0:
                 lang.addSentence(line)
                 SongCi["lines"].append(lang.sentence2Indice(line))

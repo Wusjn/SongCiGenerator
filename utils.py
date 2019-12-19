@@ -54,8 +54,8 @@ class SongCiDataset(Dataset):
         rhythmic = SongCi["rhythmic"]
         src = SongCi["lines"][0]
         trg = reduce(lambda a, b: a+b, SongCi["lines"][1:], [])
-        src = [self.lang.word2index["<SOS>"]] + src + [self.lang.word2index["<EOS>"]]
-        trg = [self.lang.word2index["<SOS>"]] + trg + [self.lang.word2index["<EOS>"]]
+        src = [self.lang.word2index["<SOS>"]] + src #+ [self.lang.word2index["<EOS>"]]
+        trg = [self.lang.word2index["<SOS>"]] + trg #+ [self.lang.word2index["<EOS>"]]
         return {"src":src, "trg":trg, "rhythmic":rhythmic}
 
 def pad_tensor(vecs):
@@ -80,3 +80,10 @@ def load_data(batch_size):
     with open("data/lang.pkl", "rb") as file:
         lang = pickle.load(file)
     return lang, getDataloader("data/train_set.pkl",lang,batch_size), getDataloader("data/val_set.pkl",lang,batch_size), getDataloader("data/test_set.pkl",lang,batch_size)
+
+
+def print_tensor(lang,tensor):
+    lists = tensor.data.detach().numpy().transpose(1,0).tolist()
+    for list in lists:
+        print(lang.indice2sentence(list))
+    print()

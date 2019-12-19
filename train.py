@@ -46,10 +46,12 @@ def evaluate(model, val_iter, vocab_size, lang):
 def train(e, model, optimizer, train_iter, vocab_size, grad_clip, lang):
     model.train()
     total_loss = 0
-    pad = 0
+    pad = lang.word2index["<pad>"]
     for b, batch in enumerate(train_iter):
         src = torch.from_numpy(batch["src"])
         trg = torch.from_numpy(batch["trg"])
+        #print_tensor(lang,src)
+        #print_tensor(lang,trg)
         src, trg = src.cuda(), trg.cuda()
         optimizer.zero_grad()
         output = model(src, trg)
@@ -57,7 +59,7 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, lang):
                                trg[1:].contiguous().view(-1),
                                ignore_index=pad)
         loss.backward()
-        clip_grad_norm(model.parameters(), grad_clip)
+        #clip_grad_norm(model.parameters(), grad_clip)
         optimizer.step()
         total_loss += loss.item()
 
@@ -66,6 +68,7 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, lang):
             print("[%d][loss:%5.2f][pp:%5.2f]" %
                   (b, total_loss, math.exp(total_loss)))
             total_loss = 0
+
 
 
 

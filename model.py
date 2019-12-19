@@ -4,6 +4,7 @@ import random
 from torch import nn
 from torch.autograd import Variable
 import torch.nn.functional as F
+from utils import *
 
 
 class Encoder(nn.Module):
@@ -90,6 +91,7 @@ class Seq2Seq(nn.Module):
         super(Seq2Seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
+        #self.lang = lang
 
     def forward(self, src, trg, teacher_forcing_ratio=0.5):
         batch_size = src.size(1)
@@ -107,4 +109,5 @@ class Seq2Seq(nn.Module):
             is_teacher = random.random() < teacher_forcing_ratio
             top1 = output.data.max(1)[1]
             output = Variable(trg.data[t] if is_teacher else top1).cuda()
+            #print_tensor(output)
         return outputs
