@@ -32,7 +32,7 @@ def translate(model, val_iter, vocab_size, lang):
 
 
 print("[!] preparing dataset...")
-lang, train_iter, val_iter, test_iter = load_data(16)
+lang, train_iter = load_data(32)
 vocab_size = len(lang.index2word)
 
 hidden_size = 512
@@ -45,20 +45,20 @@ decoder = Decoder(embed_size, hidden_size, vocab_size,
                   n_layers=1, dropout=0.5)
 seq2seq = Seq2Seq(encoder, decoder)
 
-seq2seq.load_state_dict(torch.load("./.save/seq2seq_{}.pt".format(6)))
+seq2seq.load_state_dict(torch.load("./.save/seq2seq_{}.pt".format(1)))
 seq2seq = seq2seq.cuda()
 
 def printSortedIdx(lang,probs):
     probs = list(map(lambda x:math.exp(x), probs))
     total = sum(probs)
     sortedProbs = sorted(range(len(probs)), key=lambda k: probs[k], reverse=True)
-    print(lang.indice2sentence(sortedProbs[:5]))
+    #print(lang.indice2sentence(sortedProbs[:5]))
 
 def getMaxProbIdx(lang,probs):
     printSortedIdx(lang,probs)
     probs = list(map(lambda x:math.exp(x), probs))
     total = sum(probs)
-    print(total, max(probs), probs.index(max(probs)))
+    #print(total, max(probs), probs.index(max(probs)))
     choice = random.random() * total
     #print(choice)
     idx, cur = 0,0
@@ -72,27 +72,77 @@ def getMaxProbIdx(lang,probs):
 
 #TODO: using seq2seq to generate Song Ci
 
-src = "明月几时有"
-trg = "把酒问青天不知天上宫阙今夕是何年我欲乘风归去又恐琼楼玉宇高处不胜寒起舞弄清影何似在人间转朱阁低绮户照无眠不应有恨何事长向别时圆人有悲欢离合月有阴晴圆缺此事古难全但愿人长久千里共婵娟"
-src = lang.sentence2Indice(src)
-trg = lang.sentence2Indice(trg)
-src = [1] + src #+ [2]
-trg = [1] + trg #+ [2]
-src = torch.from_numpy(np.array(src))
-trg = torch.from_numpy(np.array(trg))
-src = src.unsqueeze(1).cuda()
-trg = trg.unsqueeze(1).cuda()
-print_tensor(lang,src.cpu())
-print_tensor(lang,trg.cpu())
+def sentence2tensor(sentence, lang):
+    sentence = [1] + lang.sentence2Indice(sentence)
+    sentence = torch.from_numpy(np.array(sentence)).unsqueeze(1)
+    #print_tensor(lang,sentence)
+    sentence = sentence.cuda()
+    return sentence
 
-outputs = seq2seq(src, trg, teacher_forcing_ratio=0.0)
-outputs = outputs.squeeze(1)
+def outputs2sentence(outputs, lang):
+    outputs = outputs.squeeze(1)
+    outputs = outputs.data.detach().cpu().numpy().tolist()
+    outputs = map(lambda probs: getMaxProbIdx(lang, probs), outputs[1:])
+    sentence = lang.indice2sentence(outputs)
+    return  sentence
 
-#top1 = outputs.data.max(1)[1]
-outputs = outputs.data.detach().cpu().numpy().tolist()
-outputs = map(lambda probs: getMaxProbIdx(lang,probs),outputs[1:])
+sample = ["明月几时有",
+          "把酒问青天",
+          "不知天上宫阙",
+          "今夕是何年",
+          "我欲乘风归去",
+          "又恐琼楼玉宇",
+          "高处不胜寒",
+          "起舞弄清影",
+          "何似在人间",
+          "转朱阁",
+          "低绮户",
+          "照无眠",
+          "不应有恨",
+          "何事长向别时圆",
+          "人有悲欢离合",
+          "月有阴晴圆缺",
+          "此事古难全",
+          "但愿人长久",
+          "千里共婵娟"]
 
-sentence = lang.indice2sentence(outputs)
+rhythmic = "水调歌头"
+firstSentence = "明月几时有"
+sentenceLenth = [5,5,6,5,6,6,5,5,5,3,3,3,4,7,6,6,5,5,5]
 
-#print(top1)
-print(sentence)
+def getRhythmicForm(rhythmic):
+    regularForm = None
+    with open("rhythmics/" + rhythmic + ".sort.json", "r") as file:
+        rhythmicForms = json.load(file)
+        regularForm = rhythmicForms[0]
+    if regularForm == None:
+        print("rhythmic not exist!")
+        sys.exit(1)
+    #print(regularForm)
+    return regularForm
+
+def generateSongCi(firstSentence, rhythmic, lang):
+    regularForm = getRhythmicForm(rhythmic)
+    lines = [firstSentence]
+    src = sentence2tensor(firstSentence, lang)
+    for trgLenIdx in range(1,len(regularForm["lengths"])):
+        trgLen = regularForm["lengths"][trgLenIdx]
+        trg = sentence2tensor("人"*trgLen, lang)
+
+        outputs = seq2seq(src, trg, teacher_forcing_ratio=0.0)
+
+        sentence = outputs2sentence(outputs, lang)
+        lines.append(sentence)
+        src = sentence2tensor(sentence,lang).cuda()
+    generatedSongCi = {}
+    generatedSongCi["rhythmic"] = regularForm["rhythmic"]
+    generatedSongCi["lines"] = lines
+    generatedSongCi["punctuations"] = regularForm["punctuations"]
+
+    generatedSongCi["text"] =  generatedSongCi["rhythmic"] + "\n\n"
+    for i in range(0,len(lines)):
+        generatedSongCi["text"] += lines[i] + generatedSongCi["punctuations"][i] + "\n"
+    return generatedSongCi
+
+
+print(generateSongCi(firstSentence, rhythmic, lang)["text"])
