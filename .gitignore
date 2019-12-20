@@ -2,6 +2,7 @@
 data/
 ci/
 pairs/
+rhythmics/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -109,6 +110,7 @@ ENV/
 .data
 .save
 .save_dev
+.save_same
 .samples
 .tmp
 
