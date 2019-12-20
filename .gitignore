@@ -1,6 +1,6 @@
 # Song Ci data
-.data
-.ci
+data/
+ci/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
