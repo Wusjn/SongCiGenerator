@@ -44,6 +44,7 @@ def evaluate(model, val_iter, vocab_size, lang):
 
 
 def train(e, model, optimizer, train_iter, vocab_size, grad_clip, lang):
+    torch.cuda.empty_cache()
     model.train()
     total_loss = 0
     pad = lang.word2index["<pad>"]
