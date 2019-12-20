@@ -1,0 +1,16 @@
+import json
+import pickle
+from utils import Lang
+
+lang = Lang()
+for i in range(2,9):
+    for j in range(2,9):
+        filename = "pairs/" + str(i) + "_" + str(j) + ".json"
+        with open(filename,"r") as file:
+            pairs = json.load(file)
+        for pair in pairs:
+            lang.addSentence(pair["src"])
+            lang.addSentence(pair["trg"])
+
+with open("data/lang.pkl","wb") as file:
+    pickle.dump(lang,file)
