@@ -1,6 +1,7 @@
 import json
 import pickle
 from utils import Lang
+import os
 
 lang = Lang()
 for i in range(2,9):
@@ -12,5 +13,8 @@ for i in range(2,9):
             lang.addSentence(pair["src"])
             lang.addSentence(pair["trg"])
 
+
+if not os.path.isdir("data"):
+    os.makedirs("data")
 with open("data/lang.pkl","wb") as file:
     pickle.dump(lang,file)
