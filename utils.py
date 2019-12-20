@@ -39,23 +39,23 @@ class Lang:
 
 
 class SongCiDataset(Dataset):
-    def partition(self, pairs, batch_size):
+    def partition(self, pairs):
         batches = []
-        self.batch_size = batch_size
-        for begin in range(0,len(pairs),batch_size):
-            end = begin + batch_size
+        for begin in range(0,len(pairs),self.batch_size):
+            end = begin + self.batch_size
             if end > len(pairs):
                 end = len(pairs)
             batches.append(pairs[begin:end])
         return batches
 
-    def __init__(self,root,lang):
+    def __init__(self,root,lang, batch_size):
         self.lang = lang
         self.root = root
+        self.batch_size = batch_size
         self.batches = []
         for i in range(2,9):
             for j in range(2,9):
-                filename = str(i) + "_" + str(j) + ".json"
+                filename = root + "/" + str(i) + "_" + str(j) + ".json"
                 with open(filename,"r") as file:
                     pairs = json.load(file)
                 self.batches.extend(self.partition(pairs))
@@ -84,7 +84,7 @@ def collate_fn(items):
     return {"src":items[0]["src"], "trg":items[0]["trg"]}
 
 def getDataloader(dataset,lang,batch_size):
-    return DataLoader(SongCiDataset(dataset,lang,batch_size), batch_size=1, shuffle=True, collate_fn=collate_fn())
+    return DataLoader(SongCiDataset(dataset,lang,batch_size), batch_size=1, shuffle=True, collate_fn=collate_fn)
 
 def load_data(batch_size):
     with open("data/lang.pkl", "rb") as file:

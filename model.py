@@ -16,13 +16,14 @@ class Encoder(nn.Module):
         self.embed_size = embed_size
         self.embed = nn.Embedding(input_size, embed_size)
         self.grus = []
-        for i in range(2, 8):
+        for i in range(2, 9):
             self.grus.append(nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True))
 
 
     def forward(self, src, gruIdx, hidden=None):
-        embedded = self.embed(src)
-        outputs, hidden = self.grus[gruIdx](embedded, hidden)
+        embedded = self.embed(src) 
+        gru = self.grus[gruIdx]
+        outputs, hidden = gru(embedded, hidden)
         # sum bidirectional outputs
         outputs = (outputs[:, :, :self.hidden_size] +
                    outputs[:, :, self.hidden_size:])
@@ -68,7 +69,7 @@ class Decoder(nn.Module):
         self.attention = Attention(hidden_size)
 
         self.grus = []
-        for i in range(2, 8):
+        for i in range(2, 9):
             self.grus.append(nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout))
 
         self.out = nn.Linear(hidden_size * 2, output_size)
