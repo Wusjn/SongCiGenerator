@@ -72,27 +72,50 @@ def getMaxProbIdx(lang,probs):
 
 #TODO: using seq2seq to generate Song Ci
 
-src = "明月几时有"
-trg = "把酒问青天不知天上宫阙今夕是何年我欲乘风归去又恐琼楼玉宇高处不胜寒起舞弄清影何似在人间转朱阁低绮户照无眠不应有恨何事长向别时圆人有悲欢离合月有阴晴圆缺此事古难全但愿人长久千里共婵娟"
-src = lang.sentence2Indice(src)
-trg = lang.sentence2Indice(trg)
-src = [1] + src #+ [2]
-trg = [1] + trg #+ [2]
-src = torch.from_numpy(np.array(src))
-trg = torch.from_numpy(np.array(trg))
-src = src.unsqueeze(1).cuda()
-trg = trg.unsqueeze(1).cuda()
-print_tensor(lang,src.cpu())
-print_tensor(lang,trg.cpu())
+def sentence2tensor(sentence, lang):
+    sentence = [1] + lang.sentence2Indice(sentence)
+    sentence = torch.from_numpy(np.array(sentence)).unsqueeze(1)
+    print_tensor(sentence)
+    sentence = sentence.cuda()
+    return sentence
 
-outputs = seq2seq(src, trg, teacher_forcing_ratio=0.0)
-outputs = outputs.squeeze(1)
+def outputs2sentence(outputs, lang):
+    outputs = outputs.squeeze(1)
+    outputs = outputs.data.detach().cpu().numpy().tolist()
+    outputs = map(lambda probs: getMaxProbIdx(lang, probs), outputs[1:])
+    sentence = lang.indice2sentence(outputs)
+    return  sentence
 
-#top1 = outputs.data.max(1)[1]
-outputs = outputs.data.detach().cpu().numpy().tolist()
-outputs = map(lambda probs: getMaxProbIdx(lang,probs),outputs[1:])
+sample = ["明月几时有",
+          "把酒问青天",
+          "不知天上宫阙",
+          "今夕是何年",
+          "我欲乘风归去",
+          "又恐琼楼玉宇",
+          "高处不胜寒",
+          "起舞弄清影",
+          "何似在人间",
+          "转朱阁",
+          "低绮户",
+          "照无眠",
+          "不应有恨",
+          "何事长向别时圆",
+          "人有悲欢离合",
+          "月有阴晴圆缺",
+          "此事古难全",
+          "但愿人长久",
+          "千里共婵娟"]
 
-sentence = lang.indice2sentence(outputs)
+sentenceLenth = [5,5,6,5,6,6,5,5,5,3,3,3,4,7,6,6,5,5,5]
+firstSentence = "明月几时有"
 
-#print(top1)
-print(sentence)
+src = sentence2tensor(firstSentence, lang)
+print(src)
+for trgLenIdx in range(1,len(sentenceLenth)):
+    trgLen = sentenceLenth[trgLenIdx]
+    trg = sentence2tensor("人"*trgLen, lang)
+
+    outputs = seq2seq(src, trg, teacher_forcing_ratio=0.0)
+
+    src = outputs2sentence(outputs, lang)
+    print(src)

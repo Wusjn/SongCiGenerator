@@ -3,7 +3,7 @@ import pickle
 from torch.utils.data import Dataset, DataLoader
 import torch
 import numpy as np
-
+import json
 
 class Lang:
     def __init__(self):
@@ -39,24 +39,38 @@ class Lang:
 
 
 class SongCiDataset(Dataset):
-    def __init__(self,SongCiDatabaseFile,lang):
-        self.SongCiDatasets = []
-        self.lang = lang
-        with open(SongCiDatabaseFile,"rb") as file:
-           self.SongCiDatasets = pickle.load(file)
+    def partition(self, pairs, batch_size):
+        batches = []
+        self.batch_size = batch_size
+        for begin in range(0,len(pairs),batch_size):
+            end = begin + batch_size
+            if end > len(pairs):
+                end = len(pairs)
+            batches.append(pairs[begin:end])
+        return batches
 
+    def __init__(self,root,lang):
+        self.lang = lang
+        self.root = root
+        self.batches = []
+        for i in range(2,9):
+            for j in range(2,9):
+                filename = str(i) + "_" + str(j) + ".json"
+                with open(filename,"r") as file:
+                    pairs = json.load(file)
+                self.batches.extend(self.partition(pairs))
 
     def __len__(self):
-        return len(self.SongCiDatasets)
+        return len(self.batches)
 
     def __getitem__(self, idx):
-        SongCi = self.SongCiDatasets[idx]
-        rhythmic = SongCi["rhythmic"]
-        src = SongCi["lines"][0]
-        trg = reduce(lambda a, b: a+b, SongCi["lines"][1:], [])
-        src = [self.lang.word2index["<SOS>"]] + src #+ [self.lang.word2index["<EOS>"]]
-        trg = [self.lang.word2index["<SOS>"]] + trg #+ [self.lang.word2index["<EOS>"]]
-        return {"src":src, "trg":trg, "rhythmic":rhythmic}
+        batch = self.batches[idx]
+        src, trg = [], []
+        for pair in batch:
+            src.append([self.lang.word2index["<SOS>"]] + self.lang.sentence2Indice(pair["src"]))
+            trg.append([self.lang.word2index["<SOS>"]] + self.lang.sentence2Indice(pair["trg"]))
+        src, trg = np.array(src).transpose(1,0), np.array(trg).transpose(1,0)
+        return {"src":src, "trg":trg}
 
 def pad_tensor(vecs):
     max_lenth = max([len(vec) for vec in vecs])
@@ -67,19 +81,15 @@ def pad_tensor(vecs):
     return np.transpose(np.array(paded_vecs))
 
 def collate_fn(items):
-    srcs = [item["src"] for item in items]
-    trgs = [item["trg"] for item in items]
-    rhythmics = [item["rhythmic"] for item in items]
-
-    return {"src":pad_tensor(srcs), "trg":pad_tensor(trgs), "rhythmic":pad_tensor(rhythmics)}
+    return {"src":items[0]["src"], "trg":items[0]["trg"]}
 
 def getDataloader(dataset,lang,batch_size):
-    return DataLoader(SongCiDataset(dataset,lang), batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+    return DataLoader(SongCiDataset(dataset,lang,batch_size), batch_size=1, shuffle=True, collate_fn=collate_fn())
 
 def load_data(batch_size):
     with open("data/lang.pkl", "rb") as file:
         lang = pickle.load(file)
-    return lang, getDataloader("data/train_set.pkl",lang,batch_size), getDataloader("data/val_set.pkl",lang,batch_size), getDataloader("data/test_set.pkl",lang,batch_size)
+    return lang, getDataloader("pairs",lang,batch_size)
 
 
 def print_tensor(lang,tensor):

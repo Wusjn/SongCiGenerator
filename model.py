@@ -15,12 +15,14 @@ class Encoder(nn.Module):
         self.hidden_size = hidden_size
         self.embed_size = embed_size
         self.embed = nn.Embedding(input_size, embed_size)
-        self.gru = nn.GRU(embed_size, hidden_size, n_layers,
-                          dropout=dropout, bidirectional=True)
+        self.grus = []
+        for i in range(2, 8):
+            self.grus.append(nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True))
 
-    def forward(self, src, hidden=None):
+
+    def forward(self, src, gruIdx, hidden=None):
         embedded = self.embed(src)
-        outputs, hidden = self.gru(embedded, hidden)
+        outputs, hidden = self.grus[gruIdx](embedded, hidden)
         # sum bidirectional outputs
         outputs = (outputs[:, :, :self.hidden_size] +
                    outputs[:, :, self.hidden_size:])
@@ -64,11 +66,14 @@ class Decoder(nn.Module):
         self.embed = nn.Embedding(output_size, embed_size)
         self.dropout = nn.Dropout(dropout, inplace=True)
         self.attention = Attention(hidden_size)
-        self.gru = nn.GRU(hidden_size + embed_size, hidden_size,
-                          n_layers, dropout=dropout)
+
+        self.grus = []
+        for i in range(2, 8):
+            self.grus.append(nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout))
+
         self.out = nn.Linear(hidden_size * 2, output_size)
 
-    def forward(self, input, last_hidden, encoder_outputs):
+    def forward(self, input, last_hidden, encoder_outputs, gruIdx):
         # Get the embedding of the current input word (last output word)
         embedded = self.embed(input).unsqueeze(0)  # (1,B,N)
         embedded = self.dropout(embedded)
@@ -78,7 +83,7 @@ class Decoder(nn.Module):
         context = context.transpose(0, 1)  # (1,B,N)
         # Combine embedded input word and attended context, run through RNN
         rnn_input = torch.cat([embedded, context], 2)
-        output, hidden = self.gru(rnn_input, last_hidden)
+        output, hidden = self.grus[gruIdx](rnn_input, last_hidden)
         output = output.squeeze(0)  # (1,B,N) -> (B,N)
         context = context.squeeze(0)
         output = self.out(torch.cat([output, context], 1))
@@ -99,15 +104,19 @@ class Seq2Seq(nn.Module):
         vocab_size = self.decoder.output_size
         outputs = Variable(torch.zeros(max_len, batch_size, vocab_size)).cuda()
 
-        encoder_output, hidden = self.encoder(src)
+        srcLen = src.shape[0]
+        trgLen = trg.shape[0]
+
+        encoder_output, hidden = self.encoder(src,srcLen)
         hidden = hidden[:self.decoder.n_layers]
         output = Variable(trg.data[0, :])  # sos
         for t in range(1, max_len):
             output, hidden, attn_weights = self.decoder(
-                    output, hidden, encoder_output)
+                    output, hidden, encoder_output, trgLen)
             outputs[t] = output
             is_teacher = random.random() < teacher_forcing_ratio
             top1 = output.data.max(1)[1]
             output = Variable(trg.data[t] if is_teacher else top1).cuda()
             #print_tensor(output)
         return outputs
+

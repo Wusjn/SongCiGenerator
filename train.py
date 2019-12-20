@@ -48,6 +48,7 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, lang):
     total_loss = 0
     pad = lang.word2index["<pad>"]
     for b, batch in enumerate(train_iter):
+        torch.cuda.empty_cache()
         src = torch.from_numpy(batch["src"])
         trg = torch.from_numpy(batch["trg"])
         #print_tensor(lang,src)
@@ -79,7 +80,7 @@ def main():
     assert torch.cuda.is_available()
 
     print("[!] preparing dataset...")
-    lang, train_iter, val_iter, test_iter = load_data(args.batch_size)
+    lang, train_iter = load_data(args.batch_size)
     vocab_size = len(lang.index2word)
 
     print("[lang_vocab]:%d" % (vocab_size))
@@ -97,9 +98,9 @@ def main():
     for e in range(1, args.epochs+1):
         train(e, seq2seq, optimizer, train_iter,
               vocab_size, args.grad_clip, lang)
-        val_loss = evaluate(seq2seq, val_iter, vocab_size, lang)
-        print("[Epoch:%d] val_loss:%5.3f | val_pp:%5.2fS"
-              % (e, val_loss, math.exp(val_loss)))
+        #val_loss = evaluate(seq2seq, val_iter, vocab_size, lang)
+        #print("[Epoch:%d] val_loss:%5.3f | val_pp:%5.2fS"
+        #     % (e, val_loss, math.exp(val_loss)))
 
         # Save the model whether the validation loss is the best we've seen so far or not
         if not best_val_loss or True : #val_loss < best_val_loss:
@@ -107,10 +108,10 @@ def main():
             if not os.path.isdir(".save"):
                 os.makedirs(".save")
             torch.save(seq2seq.state_dict(), './.save/seq2seq_%d.pt' % (e))
-            if best_val_loss == None or best_val_loss > val_loss:
-                best_val_loss = val_loss
-    test_loss = evaluate(seq2seq, test_iter, vocab_size, lang)
-    print("[TEST] loss:%5.2f" % test_loss)
+            #if best_val_loss == None or best_val_loss > val_loss:
+            #    best_val_loss = val_loss
+    #test_loss = evaluate(seq2seq, test_iter, vocab_size, lang)
+    #print("[TEST] loss:%5.2f" % test_loss)
 
 
 
