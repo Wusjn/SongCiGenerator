@@ -106,17 +106,43 @@ sample = ["明月几时有",
           "但愿人长久",
           "千里共婵娟"]
 
-sentenceLenth = [5,5,6,5,6,6,5,5,5,3,3,3,4,7,6,6,5,5,5]
+rhythmic = "水调歌头"
 firstSentence = "明月几时有"
+sentenceLenth = [5,5,6,5,6,6,5,5,5,3,3,3,4,7,6,6,5,5,5]
 
-print(firstSentence)
-src = sentence2tensor(firstSentence, lang)
-for trgLenIdx in range(1,len(sentenceLenth)):
-    trgLen = sentenceLenth[trgLenIdx]
-    trg = sentence2tensor("人"*trgLen, lang)
+def getRhythmicForm(rhythmic):
+    regularForm = None
+    with open("rhythmics/" + rhythmic + ".sort.json", "r") as file:
+        rhythmicForms = json.load(file)
+        regularForm = rhythmicForms[0]
+    if regularForm == None:
+        print("rhythmic not exist!")
+        sys.exit(1)
+    #print(regularForm)
+    return regularForm
 
-    outputs = seq2seq(src, trg, teacher_forcing_ratio=0.0)
+def generateSongCi(firstSentence, rhythmic, lang):
+    regularForm = getRhythmicForm(rhythmic)
+    lines = [firstSentence]
+    src = sentence2tensor(firstSentence, lang)
+    for trgLenIdx in range(1,len(regularForm["lengths"])):
+        trgLen = regularForm["lengths"][trgLenIdx]
+        trg = sentence2tensor("人"*trgLen, lang)
 
-    sentence = outputs2sentence(outputs, lang)
-    print(sentence)
-    src = sentence2tensor(sentence,lang).cuda()
+        outputs = seq2seq(src, trg, teacher_forcing_ratio=0.0)
+
+        sentence = outputs2sentence(outputs, lang)
+        lines.append(sentence)
+        src = sentence2tensor(sentence,lang).cuda()
+    generatedSongCi = {}
+    generatedSongCi["rhythmic"] = regularForm["rhythmic"]
+    generatedSongCi["lines"] = lines
+    generatedSongCi["punctuations"] = regularForm["punctuations"]
+
+    generatedSongCi["text"] =  generatedSongCi["rhythmic"] + "\n\n"
+    for i in range(0,len(lines)):
+        generatedSongCi["text"] += lines[i] + generatedSongCi["punctuations"][i] + "\n"
+    return generatedSongCi
+
+
+print(generateSongCi(firstSentence, rhythmic, lang)["text"])
