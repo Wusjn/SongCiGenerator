@@ -48,6 +48,7 @@ def train(e, model, optimizer, train_iter, vocab_size, grad_clip, lang):
     total_loss = 0
     pad = lang.word2index["<pad>"]
     for b, batch in enumerate(train_iter):
+        torch.cuda.empty_cache()
         src = torch.from_numpy(batch["src"])
         trg = torch.from_numpy(batch["trg"])
         #print_tensor(lang,src)
