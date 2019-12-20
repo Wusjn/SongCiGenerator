@@ -1,6 +1,7 @@
 # Song Ci data
 data/
 ci/
+pairs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -107,6 +108,7 @@ ENV/
 # training
 .data
 .save
+.save_dev
 .samples
 .tmp
 

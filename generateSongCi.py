@@ -32,7 +32,7 @@ def translate(model, val_iter, vocab_size, lang):
 
 
 print("[!] preparing dataset...")
-lang, train_iter, val_iter, test_iter = load_data(16)
+lang, train_iter = load_data(32)
 vocab_size = len(lang.index2word)
 
 hidden_size = 512
@@ -45,20 +45,20 @@ decoder = Decoder(embed_size, hidden_size, vocab_size,
                   n_layers=1, dropout=0.5)
 seq2seq = Seq2Seq(encoder, decoder)
 
-seq2seq.load_state_dict(torch.load("./.save/seq2seq_{}.pt".format(6)))
+seq2seq.load_state_dict(torch.load("./.save_dev/seq2seq_{}.pt".format(1)))
 seq2seq = seq2seq.cuda()
 
 def printSortedIdx(lang,probs):
     probs = list(map(lambda x:math.exp(x), probs))
     total = sum(probs)
     sortedProbs = sorted(range(len(probs)), key=lambda k: probs[k], reverse=True)
-    print(lang.indice2sentence(sortedProbs[:5]))
+    #print(lang.indice2sentence(sortedProbs[:5]))
 
 def getMaxProbIdx(lang,probs):
     printSortedIdx(lang,probs)
     probs = list(map(lambda x:math.exp(x), probs))
     total = sum(probs)
-    print(total, max(probs), probs.index(max(probs)))
+    #print(total, max(probs), probs.index(max(probs)))
     choice = random.random() * total
     #print(choice)
     idx, cur = 0,0
@@ -75,7 +75,7 @@ def getMaxProbIdx(lang,probs):
 def sentence2tensor(sentence, lang):
     sentence = [1] + lang.sentence2Indice(sentence)
     sentence = torch.from_numpy(np.array(sentence)).unsqueeze(1)
-    print_tensor(sentence)
+    #print_tensor(lang,sentence)
     sentence = sentence.cuda()
     return sentence
 
@@ -109,13 +109,14 @@ sample = ["明月几时有",
 sentenceLenth = [5,5,6,5,6,6,5,5,5,3,3,3,4,7,6,6,5,5,5]
 firstSentence = "明月几时有"
 
+print(firstSentence)
 src = sentence2tensor(firstSentence, lang)
-print(src)
 for trgLenIdx in range(1,len(sentenceLenth)):
     trgLen = sentenceLenth[trgLenIdx]
     trg = sentence2tensor("人"*trgLen, lang)
 
     outputs = seq2seq(src, trg, teacher_forcing_ratio=0.0)
 
-    src = outputs2sentence(outputs, lang)
-    print(src)
+    sentence = outputs2sentence(outputs, lang)
+    print(sentence)
+    src = sentence2tensor(sentence,lang).cuda()
