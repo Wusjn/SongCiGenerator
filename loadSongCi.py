@@ -4,6 +4,10 @@ import random
 import pickle
 import numpy
 from utils import Lang
+import os
+
+if not os.path.isdir("data"):
+    os.makedirs("data")
 
 rawSongCiDatabase = []
 for i in range(0,22):
