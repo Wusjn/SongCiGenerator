@@ -45,7 +45,7 @@ decoder = Decoder(embed_size, hidden_size, vocab_size,
                   n_layers=1, dropout=0.5)
 seq2seq = Seq2Seq(encoder, decoder)
 
-seq2seq.load_state_dict(torch.load("./.save_dev/seq2seq_{}.pt".format(1)))
+seq2seq.load_state_dict(torch.load("./.save_same/seq2seq_{}.pt".format(1)))
 seq2seq = seq2seq.cuda()
 
 def printSortedIdx(lang,probs):

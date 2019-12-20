@@ -109,6 +109,7 @@ ENV/
 .data
 .save
 .save_dev
+.save_same
 .samples
 .tmp
 

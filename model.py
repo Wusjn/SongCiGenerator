@@ -19,36 +19,16 @@ class Encoder(nn.Module):
         #self.grus = []
         #for i in range(2, 9):
         #    self.grus.append(nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True))
-        self.gru2 = nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
-        self.gru3 = nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
-        self.gru4 = nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
-        self.gru5 = nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
-        self.gru6 = nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
-        self.gru7 = nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
-        self.gru8 = nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
+        self.gru = nn.GRU(embed_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
+        
 
 
 
     def forward(self, src, gruIdx, hidden=None):
         embedded = self.embed(src)
-        if gruIdx == 2:
-            outputs, hidden = self.gru2(embedded, hidden)
-        elif gruIdx == 3:
-            outputs, hidden = self.gru3(embedded, hidden)
-        elif gruIdx == 4:
-            outputs, hidden = self.gru4(embedded, hidden)
-        elif gruIdx == 5:
-            outputs, hidden = self.gru5(embedded, hidden)
-        elif gruIdx == 6:
-            outputs, hidden = self.gru6(embedded, hidden)
-        elif gruIdx == 7:
-            outputs, hidden = self.gru7(embedded, hidden)
-        elif gruIdx == 8:
-            outputs, hidden = self.gru8(embedded, hidden)
-        else:
-            print("??????")
-            print(gruIdx)
-            sys.exit(1)
+        
+        outputs, hidden = self.gru(embedded, hidden)
+        
         #self.gru = self.grus[gruIdx]
         #outputs, hidden = self.gru(embedded, hidden)
         # sum bidirectional outputs
@@ -98,13 +78,8 @@ class Decoder(nn.Module):
         #self.grus = []
         #for i in range(2, 9):
         #    self.grus.append(nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout))
-        self.gru2 = nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout)
-        self.gru3 = nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout)
-        self.gru4 = nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout)
-        self.gru5 = nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout)
-        self.gru6 = nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout)
-        self.gru7 = nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout)
-        self.gru8 = nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout)
+        self.gru = nn.GRU(hidden_size + embed_size, hidden_size, n_layers, dropout=dropout)
+        
 
         
         self.out = nn.Linear(hidden_size * 2, output_size)
@@ -122,24 +97,8 @@ class Decoder(nn.Module):
 
         #self.gru = self.grus[gruIdx]
         #output, hidden = self.gru(rnn_input, last_hidden)
-        if gruIdx == 2:
-            output, hidden = self.gru2(rnn_input, last_hidden)
-        elif gruIdx == 3:
-            output, hidden = self.gru3(rnn_input, last_hidden)
-        elif gruIdx == 4:
-            output, hidden = self.gru4(rnn_input, last_hidden)
-        elif gruIdx == 5:
-            output, hidden = self.gru5(rnn_input, last_hidden)
-        elif gruIdx == 6:
-            output, hidden = self.gru6(rnn_input, last_hidden)
-        elif gruIdx == 7:
-            output, hidden = self.gru7(rnn_input, last_hidden)
-        elif gruIdx == 8:
-            output, hidden = self.gru8(rnn_input, last_hidden)
-        else:
-            print("??????")
-            print(gruIdx)
-            sys.exit(1)
+        
+        output, hidden = self.gru(rnn_input, last_hidden)
 
         output = output.squeeze(0)  # (1,B,N) -> (B,N)
         context = context.squeeze(0)

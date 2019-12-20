@@ -105,9 +105,9 @@ def main():
         # Save the model whether the validation loss is the best we've seen so far or not
         if not best_val_loss or True : #val_loss < best_val_loss:
             print("[!] saving model...")
-            if not os.path.isdir(".save_dev"):
-                os.makedirs(".save_dev")
-            torch.save(seq2seq.state_dict(), './.save_dev/seq2seq_%d.pt' % (e))
+            if not os.path.isdir(".save_same"):
+                os.makedirs(".save_same")
+            torch.save(seq2seq.state_dict(), './.save_same/seq2seq_%d.pt' % (e))
             #if best_val_loss == None or best_val_loss > val_loss:
             #    best_val_loss = val_loss
     #test_loss = evaluate(seq2seq, test_iter, vocab_size, lang)
