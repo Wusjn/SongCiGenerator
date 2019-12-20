@@ -112,12 +112,13 @@ sentenceLenth = [5,5,6,5,6,6,5,5,5,3,3,3,4,7,6,6,5,5,5]
 
 def getRhythmicForm(rhythmic):
     regularForm = None
-    with open("rhythmics/" + rhythmic + ".json", "r") as file:
+    with open("rhythmics/" + rhythmic + ".sort.json", "r") as file:
         rhythmicForms = json.load(file)
         regularForm = rhythmicForms[0]
     if regularForm == None:
         print("rhythmic not exist!")
         sys.exit(1)
+    #print(regularForm)
     return regularForm
 
 def generateSongCi(firstSentence, rhythmic, lang):
@@ -140,7 +141,8 @@ def generateSongCi(firstSentence, rhythmic, lang):
 
     generatedSongCi["text"] =  generatedSongCi["rhythmic"] + "\n\n"
     for i in range(0,len(lines)):
-        generatedSongCi += lines[i] + generatedSongCi["punctuations"][i] + "\n"
+        generatedSongCi["text"] += lines[i] + generatedSongCi["punctuations"][i] + "\n"
+    return generatedSongCi
 
 
-print(generateSongCi(firstSentence, sentenceLenth, lang)["text"])
+print(generateSongCi(firstSentence, rhythmic, lang)["text"])
